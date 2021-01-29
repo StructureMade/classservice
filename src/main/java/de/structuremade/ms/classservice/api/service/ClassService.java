@@ -64,10 +64,11 @@ public class ClassService {
         }
     }
 
-    public int edit(EditClass ec){
+    public int edit(EditClass ec, String jwt){
         try {
             LOGGER.info("Start editing Class");
             Class userClass = classRepo.getOne(ec.getId());
+            if (!userClass.getSchool().getId().equals(jwtUtil.extractSpecialClaim(jwt, "schoolid"))) return 2;
             userClass.setName(ec.getName());
             userClass.setClassTeacher(userRepo.getOne(ec.getUser()));
             classRepo.save(userClass);
@@ -78,12 +79,17 @@ public class ClassService {
         }
     }
 
-    public int set(String userid, SetClass sc){
+    public int set(String userid, SetClass sc, String jwt){
         try {
             LOGGER.info("Get User");
             User user = userRepo.getOne(userid);
+            Class userClass = classRepo.getOne(sc.getClassId());
+
+            if (user.getSchools().get(0).getId().equals(jwtUtil.extractSpecialClaim(jwt, "schoolid"))) return 2;
+            if (userClass.getSchool().getId().equals(jwtUtil.extractSpecialClaim(jwt, "schoolid"))) return 2;
             LOGGER.info("Set class to user");
-            user.setUserClass(classRepo.getOne(sc.getClassId()));
+
+            user.setUserClass(userClass);
             LOGGER.info("Save user");
             userRepo.save(user);
             return 0;
@@ -92,14 +98,17 @@ public class ClassService {
             return 1;
         }
     }
-    public int setLesson(String lessonid, SetClass sc){
+    public int setLesson(String lessonid, SetClass sc, String jwt){
         List<LessonRoles> lessonRolesList;
         try {
             LOGGER.info("Get class");
             Class schoolClass = classRepo.getOne(sc.getClassId());
             lessonRolesList = schoolClass.getLessonRoles();
+            LessonRoles lr = lessonRolesRepo.getOne(lessonid);
+            if (schoolClass.getSchool().getId().equals(jwtUtil.extractSpecialClaim(jwt, "schoolid"))) return 2;
+            if (lr.getSchool().getId().equals(jwtUtil.extractSpecialClaim(jwt, "schoolid"))) return 2;
             LOGGER.info("Set lesson to class");
-            lessonRolesList.add(lessonRolesRepo.getOne(lessonid));
+            lessonRolesList.add(lr);
             schoolClass.setLessonRoles(lessonRolesList);
             LOGGER.info("Save class");
             classRepo.save(schoolClass);
@@ -126,11 +135,12 @@ public class ClassService {
     }
 
     @Transactional
-    public GetClassInformation getClassInformation(String classId){
+    public GetClassInformation getClassInformation(String classId, String jwt){
         Teacher teacher;
         List<Teacher> students = new ArrayList<>();
         List<Lesson> lessons = new ArrayList<>();
         try {
+            if (!userRepo.getOne(jwtUtil.extractIdOrEmail(jwt)).getUserClass().getId().equals(classId)) return new GetClassInformation();
             LOGGER.info("Get class");
             Class schoolClass = classRepo.getOne(classId);
             LOGGER.info("Get Teacher");

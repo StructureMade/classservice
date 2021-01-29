@@ -34,28 +34,31 @@ public class ClassRoute {
 
     @CrossOrigin
     @PutMapping(name = "/edit")
-    public void edit(@RequestBody EditClass ec, HttpServletResponse response) {
-        switch (service.edit(ec)) {
+    public void edit(@RequestBody EditClass ec, HttpServletResponse response, HttpServletRequest request) {
+        switch (service.edit(ec, request.getHeader("Authorization").substring(7))) {
             case 0 -> response.setStatus(HttpStatus.OK.value());
             case 1 -> response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+            case 2 -> response.setStatus(HttpStatus.UNAUTHORIZED.value());
         }
     }
 
     @CrossOrigin
     @PostMapping("/setuser/{userid}")
-    public void set(@PathVariable String userid, @RequestBody SetClass sc, HttpServletResponse response) {
-        switch (service.set(userid, sc)) {
+    public void set(@PathVariable String userid, @RequestBody SetClass sc, HttpServletResponse response, HttpServletRequest request) {
+        switch (service.set(userid, sc, request.getHeader("Authorization").substring(7))) {
             case 0 -> response.setStatus(HttpStatus.OK.value());
             case 1 -> response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+            case 2 -> response.setStatus(HttpStatus.UNAUTHORIZED.value());
         }
     }
 
     @CrossOrigin
     @PostMapping("setlesson/{lessonrole}")
-    public void setLessonrole(@PathVariable String lessonid, SetClass sc, HttpServletResponse response) {
-        switch (service.setLesson(lessonid, sc)) {
+    public void setLessonrole(@PathVariable String lessonid, SetClass sc, HttpServletResponse response, HttpServletRequest request) {
+        switch (service.setLesson(lessonid, sc, request.getHeader("Authorization").substring(7))) {
             case 0 -> response.setStatus(HttpStatus.OK.value());
             case 1 -> response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+            case 2 -> response.setStatus(HttpStatus.UNAUTHORIZED.value());
         }
     }
 
@@ -73,11 +76,15 @@ public class ClassRoute {
 
     @CrossOrigin
     @GetMapping("/getclassinformation/{classid}")
-    public Object getClassInformation(@PathVariable String classId, HttpServletResponse response) {
-        GetClassInformation getClassInformation = service.getClassInformation(classId);
-        if (getClassInformation != null){
-            response.setStatus(HttpStatus.OK.value());
-            return gson.toJson(getClassInformation);
+    public Object getClassInformation(@PathVariable String classId, HttpServletResponse response, HttpServletRequest request) {
+        GetClassInformation getClassInformation = service.getClassInformation(classId, request.getHeader("Authorization").substring(7));
+        if (getClassInformation != null) {
+            if (getClassInformation.getLessons().get(0) != null) {
+                response.setStatus(HttpStatus.OK.value());
+                return gson.toJson(getClassInformation);
+            }
+            response.setStatus(HttpStatus.UNAUTHORIZED.value());
+            return null;
         }
         response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
         return null;
