@@ -21,7 +21,7 @@ public class ClassRoute {
     @Autowired
     ClassService service;
 
-    private Gson gson;
+    private Gson gson = new Gson();
 
     @CrossOrigin
     @PostMapping("/create")
@@ -29,11 +29,12 @@ public class ClassRoute {
         switch (service.create(cc.getName(), cc.getUser(), request.getHeader("Authorization").substring(7))) {
             case 0 -> response.setStatus(HttpStatus.CREATED.value());
             case 1 -> response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+            case 2 -> response.setStatus(HttpStatus.UNAUTHORIZED.value());
         }
     }
 
     @CrossOrigin
-    @PutMapping(name = "/edit")
+    @PutMapping("/edit")
     public void edit(@RequestBody EditClass ec, HttpServletResponse response, HttpServletRequest request) {
         switch (service.edit(ec, request.getHeader("Authorization").substring(7))) {
             case 0 -> response.setStatus(HttpStatus.OK.value());
@@ -54,8 +55,8 @@ public class ClassRoute {
 
     @CrossOrigin
     @PostMapping("setlesson/{lessonrole}")
-    public void setLessonrole(@PathVariable String lessonid, SetClass sc, HttpServletResponse response, HttpServletRequest request) {
-        switch (service.setLesson(lessonid, sc, request.getHeader("Authorization").substring(7))) {
+    public void setLessonrole(@PathVariable String lessonrole, @RequestBody SetClass sc, HttpServletResponse response, HttpServletRequest request) {
+        switch (service.setLesson(lessonrole, sc, request.getHeader("Authorization").substring(7))) {
             case 0 -> response.setStatus(HttpStatus.OK.value());
             case 1 -> response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
             case 2 -> response.setStatus(HttpStatus.UNAUTHORIZED.value());
@@ -76,10 +77,10 @@ public class ClassRoute {
 
     @CrossOrigin
     @GetMapping("/getclassinformation/{classid}")
-    public Object getClassInformation(@PathVariable String classId, HttpServletResponse response, HttpServletRequest request) {
-        GetClassInformation getClassInformation = service.getClassInformation(classId, request.getHeader("Authorization").substring(7));
+    public Object getClassInformation(@PathVariable String classid, HttpServletResponse response, HttpServletRequest request) {
+        GetClassInformation getClassInformation = service.getClassInformation(classid, request.getHeader("Authorization").substring(7));
         if (getClassInformation != null) {
-            if (getClassInformation.getLessons().get(0) != null) {
+            if (getClassInformation.getLessons() != null) {
                 response.setStatus(HttpStatus.OK.value());
                 return gson.toJson(getClassInformation);
             }
