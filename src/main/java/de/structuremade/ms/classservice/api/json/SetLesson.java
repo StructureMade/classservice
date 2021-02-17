@@ -3,17 +3,15 @@ package de.structuremade.ms.classservice.api.json;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.List;
-
 import javax.validation.constraints.NotNull;
+import java.util.List;
 
 @Getter
 @Setter
-public class SetClass {
-
+public class SetLesson {
     @NotNull
     private String classId;
 
     @NotNull
-    private List<String> lessons;
+    private List<String> students;
 }

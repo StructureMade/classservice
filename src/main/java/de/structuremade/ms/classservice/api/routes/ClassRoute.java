@@ -6,6 +6,7 @@ import de.structuremade.ms.classservice.api.json.EditClass;
 import de.structuremade.ms.classservice.api.json.SetClass;
 import de.structuremade.ms.classservice.api.json.answer.GetAllClasses;
 import de.structuremade.ms.classservice.api.json.answer.GetClassInformation;
+import de.structuremade.ms.classservice.api.json.SetLesson;
 import de.structuremade.ms.classservice.api.service.ClassService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -44,9 +45,9 @@ public class ClassRoute {
     }
 
     @CrossOrigin
-    @PostMapping("/setuser/{userid}")
-    public void set(@PathVariable String userid, @RequestBody SetClass sc, HttpServletResponse response, HttpServletRequest request) {
-        switch (service.set(userid, sc, request.getHeader("Authorization").substring(7))) {
+    @PostMapping("/set/user")
+    public void set(@RequestBody SetLesson sc, HttpServletResponse response, HttpServletRequest request) {
+        switch (service.set(sc, request.getHeader("Authorization").substring(7))) {
             case 0 -> response.setStatus(HttpStatus.OK.value());
             case 1 -> response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
             case 2 -> response.setStatus(HttpStatus.UNAUTHORIZED.value());
@@ -54,9 +55,9 @@ public class ClassRoute {
     }
 
     @CrossOrigin
-    @PostMapping("setlesson/{lessonrole}")
-    public void setLessonrole(@PathVariable String lessonrole, @RequestBody SetClass sc, HttpServletResponse response, HttpServletRequest request) {
-        switch (service.setLesson(lessonrole, sc, request.getHeader("Authorization").substring(7))) {
+    @PostMapping("/set/lesson")
+    public void setLessons(@RequestBody SetClass sc, HttpServletResponse response, HttpServletRequest request) {
+        switch (service.setLesson(sc, request.getHeader("Authorization").substring(7))) {
             case 0 -> response.setStatus(HttpStatus.OK.value());
             case 1 -> response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
             case 2 -> response.setStatus(HttpStatus.UNAUTHORIZED.value());

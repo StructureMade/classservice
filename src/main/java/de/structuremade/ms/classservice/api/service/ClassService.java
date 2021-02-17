@@ -4,6 +4,7 @@ import de.structuremade.ms.classservice.api.json.EditClass;
 import de.structuremade.ms.classservice.api.json.SetClass;
 import de.structuremade.ms.classservice.api.json.answer.GetAllClasses;
 import de.structuremade.ms.classservice.api.json.answer.GetClassInformation;
+import de.structuremade.ms.classservice.api.json.SetLesson;
 import de.structuremade.ms.classservice.api.json.answer.array.ClassArray;
 import de.structuremade.ms.classservice.api.json.answer.array.Lesson;
 import de.structuremade.ms.classservice.api.json.answer.array.Teacher;
@@ -75,18 +76,28 @@ public class ClassService {
         }
     }
 
-    public int set(String userid, SetClass sc, String jwt) {
+    public int set(SetLesson sc, String jwt) {
+        boolean unauthorized = false;
         try {
             if (jwtUtil.isTokenExpired(jwt)) return 2;
             LOGGER.info("Get User");
-            User user = userRepo.getOne(userid);
-            Class userClass = classRepo.getOne(sc.getClassId());
-            if (!user.getSchools().get(0).getId().equals(jwtUtil.extractSpecialClaim(jwt, "schoolid"))) return 2;
-            if (!userClass.getSchool().getId().equals(jwtUtil.extractSpecialClaim(jwt, "schoolid"))) return 2;
-            LOGGER.info("Set class to user");
-            user.setUserClass(userClass);
-            LOGGER.info("Save user");
-            userRepo.save(user);
+            for (String student : sc.getStudents()) {
+                User user = userRepo.getOne(student);
+                Class userClass = classRepo.getOne(sc.getClassId());
+                if (!user.getSchools().get(0).getId().equals(jwtUtil.extractSpecialClaim(jwt, "schoolid"))){
+                    unauthorized = true;
+                    continue;
+                }
+                if (!userClass.getSchool().getId().equals(jwtUtil.extractSpecialClaim(jwt, "schoolid"))) {
+                    unauthorized = true;
+                    continue;
+                }
+                LOGGER.info("Set class to user");
+                user.setUserClass(userClass);
+                LOGGER.info("Save user");
+                userRepo.save(user);
+            }
+            if (unauthorized) return 2;
             return 0;
         } catch (Exception e) {
             LOGGER.error("Couldn't set class to user", e.fillInStackTrace());
@@ -94,19 +105,28 @@ public class ClassService {
         }
     }
 
-    public int setLesson(String lessonid, SetClass sc, String jwt) {
+    public int setLesson(SetClass sc, String jwt) {
+        boolean unauthorized = false;
         List<LessonRoles> lessonRolesList;
         try {
             if (jwtUtil.isTokenExpired(jwt)) return 2;
             LOGGER.info("Get class");
             Class schoolClass = classRepo.getOne(sc.getClassId());
             lessonRolesList = schoolClass.getLessons();
-            LessonRoles lr = lessonRolesRepo.getOne(lessonid);
-            if (!schoolClass.getSchool().getId().equals(jwtUtil.extractSpecialClaim(jwt, "schoolid"))) return 2;
-            if (!lr.getSchool().getId().equals(jwtUtil.extractSpecialClaim(jwt, "schoolid"))) return 2;
-            LOGGER.info("Set lesson to class");
-            lessonRolesList.add(lr);
+            for (String lesson : sc.getLessons()) {
+                LessonRoles lr = lessonRolesRepo.getOne(lesson);
+                if (!schoolClass.getSchool().getId().equals(jwtUtil.extractSpecialClaim(jwt, "schoolid"))){
+                    unauthorized = true;
+                }
+                if (!lr.getSchool().getId().equals(jwtUtil.extractSpecialClaim(jwt, "schoolid"))){
+                    unauthorized = true;
+                }
+                if (!lessonRolesList.contains(lr)){
+                    lessonRolesList.add(lr);
+                }
+            }
             schoolClass.setLessons(lessonRolesList);
+            if (unauthorized) return 2;
             LOGGER.info("Save class");
             classRepo.save(schoolClass);
             return 0;
