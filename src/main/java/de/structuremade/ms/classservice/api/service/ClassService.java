@@ -100,13 +100,13 @@ public class ClassService {
             if (jwtUtil.isTokenExpired(jwt)) return 2;
             LOGGER.info("Get class");
             Class schoolClass = classRepo.getOne(sc.getClassId());
-            lessonRolesList = schoolClass.getLessonRoles();
+            lessonRolesList = schoolClass.getLessons();
             LessonRoles lr = lessonRolesRepo.getOne(lessonid);
             if (!schoolClass.getSchool().getId().equals(jwtUtil.extractSpecialClaim(jwt, "schoolid"))) return 2;
             if (!lr.getSchool().getId().equals(jwtUtil.extractSpecialClaim(jwt, "schoolid"))) return 2;
             LOGGER.info("Set lesson to class");
             lessonRolesList.add(lr);
-            schoolClass.setLessonRoles(lessonRolesList);
+            schoolClass.setLessons(lessonRolesList);
             LOGGER.info("Save class");
             classRepo.save(schoolClass);
             return 0;
@@ -168,7 +168,7 @@ public class ClassService {
                 students.add(new Teacher(student));
             });
             LOGGER.info("Get Lessons and set it to List");
-            schoolClass.getLessonRoles().forEach(lesson -> {
+            schoolClass.getLessons().forEach(lesson -> {
                 lessons.add(new Lesson(lesson));
             });
             return new GetClassInformation(schoolClass.getName(), lessons, teacher, students);
